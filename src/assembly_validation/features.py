@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Self
 
 import numpy as np
 
@@ -92,7 +91,7 @@ class MediaPipeHandExtractor:
     def close(self) -> None:
         self._hands.close()
 
-    def __enter__(self) -> Self:
+    def __enter__(self) -> MediaPipeHandExtractor:
         return self
 
     def __exit__(self, *_: object) -> None:
