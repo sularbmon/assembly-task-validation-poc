@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from .features import FEATURE_DIM, JOINTS_PER_HAND, pack_hands
+from .features import FEATURE_DIM, pack_hands
 
 
 PRIMITIVES = {"reach", "pick", "move", "align", "insert", "tighten", "inspect"}
