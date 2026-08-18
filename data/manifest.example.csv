@@ -1,0 +1,5 @@
+video_path,label,split,start_sec,end_sec
+data/raw/example_task_01.mp4,task_01,train,0.0,4.2
+data/raw/example_task_02.mp4,task_02,val,1.0,5.0
+data/raw/example_task_03.mp4,task_03,test,,
+
