@@ -8,6 +8,7 @@ def test_pack_hands_shape_and_presence() -> None:
     result = pack_hands(left=hand)
     assert result.shape == (FEATURE_DIM,)
     assert np.allclose(result[-2:], [1.0, 0.0])
+    assert np.allclose(result[63:66], hand[0])
 
 
 def test_normalization_is_translation_invariant() -> None:

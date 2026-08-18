@@ -43,3 +43,17 @@ def test_low_confidence_never_confirms() -> None:
     validator = SequenceValidator(["pick"], confidence_threshold=0.8, confirmation_windows=2)
     assert confirm(validator, "pick", confidence=0.4) is None
     assert validator.position == 0
+
+
+def test_timeout_is_reported_only_once_per_step() -> None:
+    validator = SequenceValidator(["pick", "place"], step_timeout_ms=1000)
+    assert validator.check_timeout(999) is None
+    event = validator.check_timeout(1000)
+    assert event is not None and event.event == EventType.TIMEOUT
+    assert validator.check_timeout(1500) is None
+
+
+def test_finalize_reports_incomplete() -> None:
+    validator = SequenceValidator(["pick", "place"])
+    event = validator.finalize(2000)
+    assert event is not None and event.event == EventType.INCOMPLETE
