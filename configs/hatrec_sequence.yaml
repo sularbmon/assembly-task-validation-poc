@@ -1,0 +1,16 @@
+# Replace these placeholders with the exact HATREC labels in the correct order.
+expected_sequence:
+  - task_01
+  - task_02
+  - task_03
+  - task_04
+  - task_05
+  - task_06
+  - task_07
+
+validation:
+  confidence_threshold: 0.70
+  confirmation_windows: 4
+  smoothing_alpha: 0.35
+  inference_stride: 5
+
