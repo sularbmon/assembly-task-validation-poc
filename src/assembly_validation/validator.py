@@ -10,6 +10,8 @@ class EventType(str, Enum):
     REPEAT = "REPEAT"
     OUT_OF_ORDER = "OUT_OF_ORDER"
     UNEXPECTED = "UNEXPECTED"
+    TIMEOUT = "TIMEOUT"
+    INCOMPLETE = "INCOMPLETE"
     COMPLETE = "COMPLETE"
 
 
@@ -36,6 +38,7 @@ class SequenceValidator:
         expected_sequence: list[str],
         confidence_threshold: float = 0.7,
         confirmation_windows: int = 4,
+        step_timeout_ms: int | None = None,
     ) -> None:
         if not expected_sequence:
             raise ValueError("expected_sequence cannot be empty")
@@ -44,11 +47,14 @@ class SequenceValidator:
         self.expected_sequence = expected_sequence
         self.confidence_threshold = confidence_threshold
         self.confirmation_windows = confirmation_windows
+        self.step_timeout_ms = step_timeout_ms
         self.position = 0
         self._candidate: str | None = None
         self._candidate_count = 0
         self._blocked_label: str | None = None
         self._release_count = 0
+        self._last_progress_ms = 0
+        self._timeout_position: int | None = None
 
     @property
     def expected_action(self) -> str | None:
@@ -108,6 +114,8 @@ class SequenceValidator:
             current_position = self.position
             self.position += 1
             self._blocked_label = label
+            self._last_progress_ms = timestamp_ms
+            self._timeout_position = None
             event_type = EventType.COMPLETE if self.complete else EventType.STEP_OK
             return ValidationEvent(
                 timestamp_ms,
@@ -132,5 +140,36 @@ class SequenceValidator:
             label,
             expected,
             confidence,
+            self.position,
+        )
+
+    def check_timeout(self, timestamp_ms: int) -> ValidationEvent | None:
+        """Report a step timeout once per sequence position."""
+        if self.complete or self.step_timeout_ms is None:
+            return None
+        if timestamp_ms - self._last_progress_ms < self.step_timeout_ms:
+            return None
+        if self._timeout_position == self.position:
+            return None
+        self._timeout_position = self.position
+        return ValidationEvent(
+            timestamp_ms,
+            EventType.TIMEOUT,
+            None,
+            self.expected_action,
+            0.0,
+            self.position,
+        )
+
+    def finalize(self, timestamp_ms: int) -> ValidationEvent | None:
+        """Create an explicit incomplete event when a stream ends early."""
+        if self.complete:
+            return None
+        return ValidationEvent(
+            timestamp_ms,
+            EventType.INCOMPLETE,
+            None,
+            self.expected_action,
+            0.0,
             self.position,
         )

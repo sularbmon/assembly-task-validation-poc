@@ -50,6 +50,7 @@ def run(args: argparse.Namespace) -> None:
         expected_sequence,
         confidence_threshold=float(settings.get("confidence_threshold", 0.7)),
         confirmation_windows=int(settings.get("confirmation_windows", 4)),
+        step_timeout_ms=settings.get("step_timeout_ms"),
     )
     smoother = ProbabilitySmoother(float(settings.get("smoothing_alpha", 0.35)))
     stride = int(settings.get("inference_stride", 5))
@@ -76,6 +77,7 @@ def run(args: argparse.Namespace) -> None:
     current_label = "warming_up"
     current_confidence = 0.0
     last_event = "WAIT"
+    last_timestamp_ms = 0
     started = time.perf_counter()
 
     with MediaPipeHandExtractor() as extractor:
@@ -85,6 +87,9 @@ def run(args: argparse.Namespace) -> None:
                 break
             window.append(extractor.extract(frame).features)
             timestamp_ms = int(capture.get(cv2.CAP_PROP_POS_MSEC))
+            if timestamp_ms <= 0:
+                timestamp_ms = int(frame_number / fps * 1000)
+            last_timestamp_ms = timestamp_ms
             if len(window) == window_size and frame_number % stride == 0:
                 tensor = torch.from_numpy(np.stack(window)[None]).to(device)
                 with torch.no_grad():
@@ -94,6 +99,8 @@ def run(args: argparse.Namespace) -> None:
                 current_label = class_names[class_id]
                 current_confidence = float(smoothed[class_id])
                 event = validator.observe(current_label, current_confidence, timestamp_ms)
+                if event is None:
+                    event = validator.check_timeout(timestamp_ms)
                 if event is not None:
                     last_event = event.event.value
                     events_handle.write(json.dumps(event.to_dict()) + "\n")
@@ -127,6 +134,9 @@ def run(args: argparse.Namespace) -> None:
                     break
             frame_number += 1
 
+    final_event = validator.finalize(last_timestamp_ms)
+    if final_event is not None:
+        events_handle.write(json.dumps(final_event.to_dict()) + "\n")
     elapsed = time.perf_counter() - started
     events_handle.close()
     writer.release()

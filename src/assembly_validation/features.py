@@ -8,7 +8,9 @@ import numpy as np
 JOINTS_PER_HAND = 21
 COORDS_PER_JOINT = 3
 MAX_HANDS = 2
-FEATURE_DIM = MAX_HANDS * JOINTS_PER_HAND * COORDS_PER_JOINT + MAX_HANDS
+WRIST_COORDS_PER_HAND = 3
+HAND_FEATURE_DIM = JOINTS_PER_HAND * COORDS_PER_JOINT + WRIST_COORDS_PER_HAND
+FEATURE_DIM = MAX_HANDS * HAND_FEATURE_DIM + MAX_HANDS
 
 
 def normalize_hand(landmarks: np.ndarray) -> np.ndarray:
@@ -26,19 +28,24 @@ def pack_hands(
     left: np.ndarray | None = None,
     right: np.ndarray | None = None,
 ) -> np.ndarray:
-    """Pack normalized left/right landmarks and two presence flags."""
+    """Pack normalized hand shape, global wrist xyz and presence flags.
+
+    Wrist coordinates are intentionally retained. Per-frame wrist centering is
+    useful for hand-pose invariance, but on its own it removes the reach/move
+    trajectory that distinguishes many assembly actions.
+    """
     features: list[np.ndarray] = []
     presence: list[float] = []
     for hand in (left, right):
         if hand is None:
-            features.append(np.zeros((JOINTS_PER_HAND, 3), dtype=np.float32))
+            features.append(np.zeros(HAND_FEATURE_DIM, dtype=np.float32))
             presence.append(0.0)
         else:
-            features.append(normalize_hand(hand))
+            points = np.asarray(hand, dtype=np.float32).reshape(JOINTS_PER_HAND, 3)
+            features.append(np.concatenate([normalize_hand(points).reshape(-1), points[0]]))
             presence.append(1.0)
-    return np.concatenate([*(item.reshape(-1) for item in features), presence]).astype(
-        np.float32
-    )
+    return np.concatenate([*features, presence]).astype(np.float32)
+
 
 
 @dataclass
