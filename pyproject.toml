@@ -25,6 +25,8 @@ dev = ["pytest>=8", "ruff>=0.6"]
 assembly-prepare = "assembly_validation.preprocess:main"
 assembly-train = "assembly_validation.train:main"
 assembly-infer = "assembly_validation.inference:main"
+assembly-synthesize = "assembly_validation.synthetic_cli:main"
+
 
 [tool.setuptools.packages.find]
 where = ["src"]
