@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "assembly-task-validation-poc"
+version = "0.1.0"
+description = "Real-time industrial assembly action recognition and sequence validation POC"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = {text = "MIT"}
+authors = [{name = "Su Larb Mon"}]
+dependencies = [
+  "numpy>=1.24,<3",
+  "opencv-python>=4.8,<5",
+  "mediapipe>=0.10,<0.11",
+  "PyYAML>=6,<7",
+  "torch>=2.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+assembly-prepare = "assembly_validation.preprocess:main"
+assembly-train = "assembly_validation.train:main"
+assembly-infer = "assembly_validation.inference:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
