@@ -13,4 +13,4 @@ validation:
   confirmation_windows: 4
   smoothing_alpha: 0.35
   inference_stride: 5
-
+  step_timeout_ms: 10000

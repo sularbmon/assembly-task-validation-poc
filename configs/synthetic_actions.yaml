@@ -1,0 +1,45 @@
+procedure:
+  expected_sequence:
+    - reach_component
+    - pick_component
+    - move_component
+    - align_component
+    - insert_component
+    - tighten_component
+    - final_inspection
+
+actions:
+  - name: reach_component
+    primitive: reach
+    hand_mode: random
+  - name: pick_component
+    primitive: pick
+    hand_mode: random
+  - name: move_component
+    primitive: move
+    hand_mode: random
+  - name: align_component
+    primitive: align
+    hand_mode: both
+  - name: insert_component
+    primitive: insert
+    hand_mode: both
+  - name: tighten_component
+    primitive: tighten
+    hand_mode: right
+  - name: final_inspection
+    primitive: inspect
+    hand_mode: both
+
+generation:
+  seed: 42
+  window_size: 45
+  samples_per_action: 200
+  noise_std: 0.002
+  occlusion_probability: 0.25
+  frame_drop_probability: 0.03
+  splits:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+
